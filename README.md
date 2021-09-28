@@ -1,4 +1,4 @@
-Test Driven Web Application Development with Spring & React
+##Test Driven Web Application Development with Spring & React
 
 This application is built with Spring and React and everything is implemented with TDD approach. You can find full training at Udemy, Test Driven Web Application Development with Spring & React
 
