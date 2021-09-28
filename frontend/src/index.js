@@ -4,9 +4,11 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+import UserSignupPage from "./pages/UserSignupPage"
+
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <UserSignupPage />
   </React.StrictMode>,
   document.getElementById('root')
 );
