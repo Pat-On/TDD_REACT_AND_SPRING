@@ -61,18 +61,18 @@ describe("UserSignupPage", () => {
 
   // test groups
   describe("Interaction", () => {
-    it('sets the displayName value into state', () => {
+    it("sets the displayName value into state", () => {
       const { queryByPlaceholderText } = render(<UserSignupPage />);
       const displayNameInput = queryByPlaceholderText("Your display name");
 
       const changeEvent = {
         target: {
-          value: "my-display-name"
-        }
-      }
+          value: "my-display-name",
+        },
+      };
 
-      fireEvent.change(displayNameInput, changeEvent)
-      expect(displayNameInput).toHaveValue("my-display-name")
-    })
-  })
+      fireEvent.change(displayNameInput, changeEvent);
+      expect(displayNameInput).toHaveValue("my-display-name");
+    });
+  });
 });
