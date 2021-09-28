@@ -1,5 +1,5 @@
 import React from "react";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom/extend-expect";
 import UserSignupPage from "./UserSignupPage";
 
@@ -58,4 +58,21 @@ describe("UserSignupPage", () => {
       expect(button).toBeInTheDocument();
     });
   });
+
+  // test groups
+  describe("Interaction", () => {
+    it('sets the displayName value into state', () => {
+      const { queryByPlaceholderText } = render(<UserSignupPage />);
+      const displayNameInput = queryByPlaceholderText("Your display name");
+
+      const changeEvent = {
+        target: {
+          value: "my-display-name"
+        }
+      }
+
+      fireEvent.change(displayNameInput, changeEvent)
+      expect(displayNameInput).toHaveValue("my-display-name")
+    })
+  })
 });
