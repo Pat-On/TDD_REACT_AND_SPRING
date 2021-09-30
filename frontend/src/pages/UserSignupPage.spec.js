@@ -1,6 +1,5 @@
 import React from "react";
 import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
-import "@testing-library/jest-dom/extend-expect";
 import UserSignupPage from "./UserSignupPage";
 
 // after React-Testing_library version 9, this cleanup part is not needed anymore
@@ -221,6 +220,28 @@ describe("UserSignupPage", () => {
       const spinner = queryByText("Loading...");
 
       await waitFor(() => expect(spinner).not.toBeInTheDocument());
+    });
+
+    it("displays validation error for displayName when error is receivd for the field", async () => {
+      const actions = {
+        postSignup: jest.fn().mockRejectedValue({
+          response: {
+            data: {
+              validationErrors: {
+                displayName: "Cannot be null",
+              },
+            },
+          },
+        }),
+      };
+
+      const { findByText } = setUpForSubmit({ actions });
+      fireEvent.click(button);
+
+      // const errorMessage = await waitFor(() => queryByText("Cannot be null"));
+      // console.log(errorMessage);
+      const errorMessage = await findByText("Cannot be null");
+      expect(errorMessage).toBeInTheDocument();
     });
   });
 });
