@@ -4,29 +4,45 @@ import Input from "../components/input";
 class UserSignupPage extends React.Component {
   state = {
     displayName: "",
-    userName: "",
+    username: "",
     password: "",
     passwordRepeat: "",
     pendingApiCall: false,
     errors: {},
+    passwordRepeatConfirmed: true,
   };
 
   onChangeDisplayName = (event) => {
     const value = event.target.value;
-    this.setState({ displayName: value });
+    const errors = { ...this.state.errors };
+    delete errors.displayName;
+    this.setState({ displayName: value, errors });
   };
   onChangeUserName = (event) => {
     const value = event.target.value;
-    this.setState({ userName: value });
+    const errors = { ...this.state.errors };
+    delete errors.username;
+    this.setState({ username: value, errors });
   };
 
   onChangePassword = (event) => {
     const value = event.target.value;
-    this.setState({ password: value });
+    const passwordRepeatConfirmed = this.state.passwordRepeat === value;
+    const errors = { ...this.state.errors };
+    delete errors.password;
+    errors.passwordRepeat = passwordRepeatConfirmed
+      ? ""
+      : "Does not match to password";
+    this.setState({ password: value, passwordRepeatConfirmed, errors });
   };
   onChangePasswordRepeat = (event) => {
     const value = event.target.value;
-    this.setState({ passwordRepeat: value });
+    const passwordRepeatConfirmed = this.state.password === value;
+    const errors = { ...this.state.errors };
+    errors.passwordRepeat = passwordRepeatConfirmed
+      ? ""
+      : "Does not match to password";
+    this.setState({ passwordRepeat: value, passwordRepeatConfirmed, errors });
   };
 
   onClickSignup = () => {
@@ -34,7 +50,7 @@ class UserSignupPage extends React.Component {
     //   this.props.actions.postSignup();
     // }
     const user = {
-      username: this.state.userName,
+      username: this.state.username,
       displayName: this.state.displayName,
       password: this.state.password,
     };
@@ -67,9 +83,6 @@ class UserSignupPage extends React.Component {
             hasError={this.state.errors.displayName && true}
             error={this.state.errors.displayName}
           />
-          <div className="invalid-feedback">
-            {this.state.errors.displayName}
-          </div>
         </div>
         <div className="col-12 mb-3">
           <Input
@@ -110,7 +123,9 @@ class UserSignupPage extends React.Component {
           <button
             className="btn btn-primary"
             onClick={this.onClickSignup}
-            disabled={this.state.pendingApiCall}
+            disabled={
+              this.state.pendingApiCall || !this.state.passwordRepeatConfirmed
+            }
           >
             {this.state.pendingApiCall && (
               <div

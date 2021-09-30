@@ -3,11 +3,8 @@ import React from "react";
 const Input = (props) => {
   let inputClassName = "form-control";
 
-  if (props.hasError === false) {
-    inputClassName += " is-valid";
-  }
-  if (props.hasError === true) {
-    inputClassName += " is-invalid";
+  if (props.hasError !== undefined) {
+    inputClassName += props.hasError ? " is-invalid" : " is-valid";
   }
 
   return (
