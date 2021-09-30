@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent } from "@testing-library/react";
+import { render, fireEvent, waitFor, findByText } from "@testing-library/react";
 import { LoginPage } from "./LoginPage";
 
 describe("LoginPage", () => {
@@ -44,6 +44,31 @@ describe("LoginPage", () => {
       };
     };
 
+    const mockAsyncDelayed = () => {
+      return jest.fn().mockResolvedValueOnce(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve({});
+          }, 300);
+        });
+      });
+    };
+
+    let usernameInput, passwordInput, button;
+    const setUpForSubmit = (props) => {
+      const rendered = render(<LoginPage {...props} />);
+
+      const { container, queryByPlaceholderText } = rendered;
+      usernameInput = queryByPlaceholderText("Your username");
+      fireEvent.change(usernameInput, changeEvent("my-user-name"));
+      passwordInput = queryByPlaceholderText("Your password");
+      fireEvent.change(passwordInput, changeEvent("P4ssword"));
+      button = container.querySelector("button");
+
+      return rendered;
+    };
+
+    // this two tests bellow have no sense in my opinion
     it("sets the username value into state", () => {
       const { queryByPlaceholderText } = render(<LoginPage />);
       const usernameInput = queryByPlaceholderText("Your username");
@@ -56,6 +81,171 @@ describe("LoginPage", () => {
       const passwordInput = queryByPlaceholderText("Your username");
       fireEvent.change(passwordInput, changeEvent("P4ssword"));
       expect(passwordInput).toHaveValue("P4ssword");
+    });
+
+    it("calss postLogin when the actions are provided in props and input fields have values", () => {
+      const actions = {
+        postLogin: jest.fn().mockResolvedValue({}),
+      };
+      setUpForSubmit({ actions });
+      fireEvent.click(button);
+      expect(actions.postLogin).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not throw exception when clicking the button when actions not provided in props", () => {
+      setUpForSubmit();
+      expect(() => fireEvent.click(button)).not.toThrow();
+    });
+
+    it("calss postLogin with credentials in body", () => {
+      const actions = {
+        postLogin: jest.fn().mockResolvedValue({}),
+      };
+      setUpForSubmit({ actions });
+      fireEvent.click(button);
+
+      const expectedUserObject = {
+        username: "my-user-name",
+        password: "P4ssword",
+      };
+
+      expect(actions.postLogin).toHaveBeenCalledWith(expectedUserObject);
+    });
+
+    it("enables the button when username and password is not empty", () => {
+      setUpForSubmit();
+      expect(button).not.toBeDisabled();
+    });
+
+    it("disables the button when username  is empty", () => {
+      setUpForSubmit();
+      fireEvent.change(usernameInput, changeEvent(""));
+      expect(button).toBeDisabled();
+    });
+
+    it("disables the button when  password is empty", () => {
+      setUpForSubmit();
+      fireEvent.change(passwordInput, changeEvent(""));
+      expect(button).toBeDisabled();
+    });
+
+    it("displays alert when login fails", async () => {
+      const actions = {
+        postLogin: jest.fn().mockRejectedValue({
+          response: {
+            data: {
+              message: "Login failed",
+            },
+          },
+        }),
+      };
+      const { findByText } = setUpForSubmit({ actions });
+      fireEvent.click(button);
+
+      const alert = await findByText("Login failed");
+      expect(alert).toBeInTheDocument();
+    });
+
+    it("clears alert when user changes username", async () => {
+      const actions = {
+        postLogin: jest.fn().mockRejectedValue({
+          response: {
+            data: {
+              message: "Login failed",
+            },
+          },
+        }),
+      };
+      const { findByText, queryByText } = setUpForSubmit({ actions });
+      fireEvent.click(button);
+      let alert = await findByText("Login failed");
+      fireEvent.change(usernameInput, changeEvent("updated-username"));
+
+      alert = queryByText("Login failed");
+      expect(alert).not.toBeInTheDocument();
+    });
+
+    it("clears alert when user changes password", async () => {
+      const actions = {
+        postLogin: jest.fn().mockRejectedValue({
+          response: {
+            data: {
+              message: "Login failed",
+            },
+          },
+        }),
+      };
+      const { findByText, queryByText } = setUpForSubmit({ actions });
+      fireEvent.click(button);
+
+      await findByText("Login failed");
+      fireEvent.change(passwordInput, changeEvent("updated-P4ssword"));
+
+      // Very interesting case that in this place we should put queryByText not findByText
+      const alert = queryByText("Login failed");
+      expect(alert).not.toBeInTheDocument();
+    });
+
+    // it is not efficient to write tests for styling because it may change more often than busines logic
+    it("does not allow user to click the Login Up button when there is an ongoing api call", () => {
+      // we are going to mock it
+      const actions = {
+        postLogin: mockAsyncDelayed(),
+      };
+      setUpForSubmit({ actions });
+      fireEvent.click(button);
+      fireEvent.click(button);
+      fireEvent.click(button);
+      expect(actions.postLogin).toHaveBeenCalledTimes(1);
+    });
+
+    it("displays spinner when there is an ongoing api call", () => {
+      // we are going to mock it
+      const actions = {
+        postLogin: mockAsyncDelayed(),
+      };
+      const { queryByText } = setUpForSubmit({ actions });
+      fireEvent.click(button);
+
+      const spinner = queryByText("Loading...");
+      expect(spinner).toBeInTheDocument();
+    });
+
+    it("hides spinner after api call finishes successfully", async () => {
+      // we are going to mock it
+      const actions = {
+        postLogin: mockAsyncDelayed(),
+      };
+      const { queryByText } = setUpForSubmit({ actions });
+      fireEvent.click(button);
+
+      const spinner = queryByText("Loading...");
+
+      await waitFor(() => expect(spinner).not.toBeInTheDocument());
+    });
+
+    it("hides spinner after api call finishes with error", async () => {
+      // we are going to mock it
+      const actions = {
+        postLogin: jest.fn().mockResolvedValueOnce(() => {
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              reject({
+                response: { data: {} },
+              });
+            }, 300);
+          });
+        }),
+      };
+      const { findByText, queryByText } = setUpForSubmit({ actions });
+      fireEvent.click(button);
+
+      // this is nice example regardin async await
+      //   const spinner = queryByText("Loading...");
+      let spinner = await findByText("Loading...");
+      await waitFor(() => expect(spinner));
+      spinner = queryByText("Loading...");
+      expect(spinner).not.toBeInTheDocument();
     });
   });
 });

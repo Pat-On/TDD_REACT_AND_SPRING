@@ -201,6 +201,7 @@ describe("UserSignupPage", () => {
       await waitFor(() => expect(spinner).not.toBeInTheDocument());
     });
 
+    /// TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     it("hides spinner after api call finishes with error", async () => {
       // we are going to mock it
       const actions = {
@@ -220,6 +221,8 @@ describe("UserSignupPage", () => {
       const spinner = queryByText("Loading...");
 
       await waitFor(() => expect(spinner).not.toBeInTheDocument());
+
+      /// TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     });
 
     it("displays validation error for displayName when error is receivd for the field", async () => {

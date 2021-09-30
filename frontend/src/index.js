@@ -11,12 +11,13 @@ import * as apiCalls from "./api/apiCalls";
 
 const actions = {
   postSignup: apiCalls.signup,
+  postLogin: apiCalls.login,
 };
 
 ReactDOM.render(
   <React.StrictMode>
     {/* <UserSignupPage actions={actions} /> */}
-    <LoginPage />
+    <LoginPage actions={actions} />
   </React.StrictMode>,
   document.getElementById("root")
 );
