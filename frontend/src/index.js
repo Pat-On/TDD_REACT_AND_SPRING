@@ -1,24 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import App from "./App";
+import App from "./containers/App";
 import reportWebVitals from "./reportWebVitals";
-
+import { HashRouter } from "react-router-dom"; // he chose it because of the reason how is backend working
 import UserSignupPage from "./pages/UserSignupPage";
 import LoginPage from "./pages/LoginPage";
 
 import * as apiCalls from "./api/apiCalls";
 
-const actions = {
-  postSignup: apiCalls.signup,
-  postLogin: apiCalls.login,
-};
-
 ReactDOM.render(
-  <React.StrictMode>
-    {/* <UserSignupPage actions={actions} /> */}
-    <LoginPage actions={actions} />
-  </React.StrictMode>,
+  <HashRouter>
+    <App />
+  </HashRouter>,
   document.getElementById("root")
 );
 
