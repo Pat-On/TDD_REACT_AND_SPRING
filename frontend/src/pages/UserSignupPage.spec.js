@@ -346,5 +346,20 @@ describe("UserSignupPage", () => {
       fireEvent.change(passwordInput, changeEvent("password-updated"));
       expect(errorMessage).not.toBeInTheDocument();
     });
+
+    it("redirects to homePage after succesful signup", async () => {
+      // we are going to mock it
+      const actions = {
+        postSignup: jest.fn().mockResolvedValue({}),
+      };
+      const history = {
+        push: jest.fn(),
+      };
+
+      setUpForSubmit({ actions, history });
+      fireEvent.click(button);
+
+      await waitFor(() => expect(history.push).toHaveBeenCalledWith("/"));
+    });
   });
 });

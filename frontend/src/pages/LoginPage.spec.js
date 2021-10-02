@@ -43,6 +43,12 @@ describe("LoginPage", () => {
         },
       };
     };
+    const history = {
+      push: jest.fn(),
+    };
+    const actions = {
+      postLogin: jest.fn().mockResolvedValue({}),
+    };
 
     const mockAsyncDelayed = () => {
       return jest.fn().mockResolvedValueOnce(() => {
@@ -87,13 +93,13 @@ describe("LoginPage", () => {
       const actions = {
         postLogin: jest.fn().mockResolvedValue({}),
       };
-      setUpForSubmit({ actions });
+      setUpForSubmit({ actions, history });
       fireEvent.click(button);
       expect(actions.postLogin).toHaveBeenCalledTimes(1);
     });
 
     it("does not throw exception when clicking the button when actions not provided in props", () => {
-      setUpForSubmit();
+      setUpForSubmit({ actions, history });
       expect(() => fireEvent.click(button)).not.toThrow();
     });
 
@@ -101,7 +107,8 @@ describe("LoginPage", () => {
       const actions = {
         postLogin: jest.fn().mockResolvedValue({}),
       };
-      setUpForSubmit({ actions });
+
+      setUpForSubmit({ actions, history });
       fireEvent.click(button);
 
       const expectedUserObject = {
@@ -113,18 +120,21 @@ describe("LoginPage", () => {
     });
 
     it("enables the button when username and password is not empty", () => {
-      setUpForSubmit();
+      const actions = {
+        postLogin: jest.fn().mockResolvedValue({}),
+      };
+      setUpForSubmit({ actions, history });
       expect(button).not.toBeDisabled();
     });
 
     it("disables the button when username  is empty", () => {
-      setUpForSubmit();
+      setUpForSubmit({ actions, history });
       fireEvent.change(usernameInput, changeEvent(""));
       expect(button).toBeDisabled();
     });
 
     it("disables the button when  password is empty", () => {
-      setUpForSubmit();
+      setUpForSubmit({ actions, history });
       fireEvent.change(passwordInput, changeEvent(""));
       expect(button).toBeDisabled();
     });
@@ -139,7 +149,10 @@ describe("LoginPage", () => {
           },
         }),
       };
-      const { findByText } = setUpForSubmit({ actions });
+      const history = {
+        push: jest.fn(),
+      };
+      const { findByText } = setUpForSubmit({ actions, history });
       fireEvent.click(button);
 
       const alert = await findByText("Login failed");
@@ -156,7 +169,10 @@ describe("LoginPage", () => {
           },
         }),
       };
-      const { findByText, queryByText } = setUpForSubmit({ actions });
+      const history = {
+        push: jest.fn(),
+      };
+      const { findByText, queryByText } = setUpForSubmit({ actions, history });
       fireEvent.click(button);
       let alert = await findByText("Login failed");
       fireEvent.change(usernameInput, changeEvent("updated-username"));
@@ -175,7 +191,10 @@ describe("LoginPage", () => {
           },
         }),
       };
-      const { findByText, queryByText } = setUpForSubmit({ actions });
+      const history = {
+        push: jest.fn(),
+      };
+      const { findByText, queryByText } = setUpForSubmit({ actions, history });
       fireEvent.click(button);
 
       await findByText("Login failed");
@@ -192,7 +211,10 @@ describe("LoginPage", () => {
       const actions = {
         postLogin: mockAsyncDelayed(),
       };
-      setUpForSubmit({ actions });
+      const history = {
+        push: jest.fn(),
+      };
+      setUpForSubmit({ actions, history });
       fireEvent.click(button);
       fireEvent.click(button);
       fireEvent.click(button);
@@ -204,7 +226,10 @@ describe("LoginPage", () => {
       const actions = {
         postLogin: mockAsyncDelayed(),
       };
-      const { queryByText } = setUpForSubmit({ actions });
+      const history = {
+        push: jest.fn(),
+      };
+      const { queryByText } = setUpForSubmit({ actions, history });
       fireEvent.click(button);
 
       const spinner = queryByText("Loading...");
@@ -216,7 +241,10 @@ describe("LoginPage", () => {
       const actions = {
         postLogin: mockAsyncDelayed(),
       };
-      const { queryByText } = setUpForSubmit({ actions });
+      const history = {
+        push: jest.fn(),
+      };
+      const { queryByText } = setUpForSubmit({ actions, history });
       fireEvent.click(button);
 
       const spinner = queryByText("Loading...");
@@ -237,7 +265,11 @@ describe("LoginPage", () => {
           });
         }),
       };
-      const { findByText, queryByText } = setUpForSubmit({ actions });
+      const history = {
+        push: jest.fn(),
+      };
+
+      const { findByText, queryByText } = setUpForSubmit({ actions, history });
       fireEvent.click(button);
 
       // this is nice example regardin async await
@@ -246,6 +278,21 @@ describe("LoginPage", () => {
       await waitFor(() => expect(spinner));
       spinner = queryByText("Loading...");
       expect(spinner).not.toBeInTheDocument();
+    });
+
+    it("redirects to homePage after succesful login", async () => {
+      // we are going to mock it
+      const actions = {
+        postLogin: jest.fn().mockResolvedValue({}),
+      };
+      const history = {
+        push: jest.fn(),
+      };
+
+      setUpForSubmit({ actions, history });
+      fireEvent.click(button);
+
+      await waitFor(() => expect(history.push).toHaveBeenCalledWith("/"));
     });
   });
 });

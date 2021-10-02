@@ -7,8 +7,6 @@ import { HashRouter } from "react-router-dom"; // he chose it because of the rea
 import UserSignupPage from "./pages/UserSignupPage";
 import LoginPage from "./pages/LoginPage";
 
-import * as apiCalls from "./api/apiCalls";
-
 ReactDOM.render(
   <HashRouter>
     <App />

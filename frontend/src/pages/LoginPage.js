@@ -28,6 +28,7 @@ export class LoginPage extends React.Component {
   };
 
   onClickLogin = () => {
+    // console.log(this.props.history);
     // console.log("lol");
     const body = {
       username: this.state.username,
@@ -37,7 +38,9 @@ export class LoginPage extends React.Component {
     this.props.actions
       .postLogin(body)
       .then((response) => {
-        this.setState({ pendingApiCall: false });
+        this.setState({ pendingApiCall: false }, () => {
+          this.props.history.push("/");
+        });
       })
       .catch((err) => {
         // console.log(err);
