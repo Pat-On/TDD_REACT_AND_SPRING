@@ -4,13 +4,20 @@ import "./index.css";
 import App from "./containers/App";
 import reportWebVitals from "./reportWebVitals";
 import { HashRouter } from "react-router-dom"; // he chose it because of the reason how is backend working
-import UserSignupPage from "./pages/UserSignupPage";
-import LoginPage from "./pages/LoginPage";
+import { Provider } from "react-redux";
+import { createStore } from "redux";
+// import UserSignupPage from "./pages/UserSignupPage";
+// import LoginPage from "./pages/LoginPage";
+import authReducer from "./redux/authReducer";
+
+const store = createStore(authReducer);
 
 ReactDOM.render(
-  <HashRouter>
-    <App />
-  </HashRouter>,
+  <Provider store={store}>
+    <HashRouter>
+      <App />
+    </HashRouter>
+  </Provider>,
   document.getElementById("root")
 );
 
