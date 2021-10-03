@@ -249,6 +249,7 @@ describe("LoginPage", () => {
 
       const spinner = queryByText("Loading...");
 
+      // THIS HAS NO SENSE -> check this deeper
       await waitFor(() => expect(spinner).not.toBeInTheDocument());
     });
 
