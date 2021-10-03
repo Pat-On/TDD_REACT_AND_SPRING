@@ -3,8 +3,8 @@ import { createStore, applyMiddleware } from "redux";
 // import LoginPage from "./pages/LoginPage";
 import authReducer from "./authReducer";
 import logger from "redux-logger";
-
 import thunk from "redux-thunk";
+import * as apiCalls from "../api/apiCalls";
 
 const configureStore = (addLogger = true) => {
   let localStorageData = localStorage.getItem("hoax-auth");
@@ -20,6 +20,7 @@ const configureStore = (addLogger = true) => {
   if (localStorageData) {
     try {
       persistedState = JSON.parse(localStorageData);
+      apiCalls.setAuthorizationHeader(persistedState);
     } catch (err) {}
   }
 
@@ -32,6 +33,7 @@ const configureStore = (addLogger = true) => {
   // this will always run when something is going to change in our store
   store.subscribe(() => {
     localStorage.setItem("hoax-auth", JSON.stringify(store.getState()));
+    apiCalls.setAuthorizationHeader(store.getState());
   });
   return store;
 };

@@ -6,12 +6,12 @@ import UserSignupPage from "../pages/UserSignupPage";
 import UserPage from "../pages/UserPage";
 import TopBar from "../components/TopBar";
 
-import * as apiCalls from "../api/apiCalls";
+// import * as apiCalls from "../api/apiCalls";
 
-const actions = {
-  postLogin: apiCalls.login,
-  postSignup: apiCalls.signup,
-};
+// const actions = {
+//   postLogin: apiCalls.login,
+//   postSignup: apiCalls.signup,
+// };
 
 function App() {
   return (
