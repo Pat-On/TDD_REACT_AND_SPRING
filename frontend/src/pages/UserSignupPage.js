@@ -3,7 +3,9 @@ import Input from "../components/input";
 import ButtonWithProgress from "../components/ButtonWithProgress";
 import { connect } from "react-redux";
 
-class UserSignupPage extends React.Component {
+import * as authActions from "../redux/authActions";
+
+export class UserSignupPage extends React.Component {
   state = {
     displayName: "",
     username: "",
@@ -60,42 +62,9 @@ class UserSignupPage extends React.Component {
     this.props.actions
       .postSignup(user)
       .then((response) => {
-        const body = {
-          username: this.state.username,
-          password: this.state.password,
-        };
-        this.setState({ pendingApiCall: true });
-        this.props.actions
-          .postLogin(body)
-          .then((response) => {
-            const action = {
-              type: "login-success",
-              payload: {
-                // id: response.data.id,
-                // username: response.data.username,
-                // displayName: response.data.displayName,
-                // image: response.data.image,
-                ...response.data,
-                password: this.state.password,
-              },
-            };
-            this.props.dispatch(action);
-            this.setState({ pendingApiCall: false }, () => {
-              this.props.history.push("/");
-            });
-          })
-          .catch((err) => {
-            // console.log(err);
-            if (err.response) {
-              this.setState({
-                apiError: err.response.data.message,
-                pendingApiCall: false,
-              });
-            }
-          });
-        // this.setState({ pendingApiCall: false }, () =>
-        //   this.props.history.push("/")
-        // );
+        this.setState({ pendingApiCall: false }, () =>
+          this.props.history.push("/")
+        );
       })
       .catch((apiError) => {
         let errors = { ...this.state.errors };
@@ -201,4 +170,12 @@ UserSignupPage.defaultProps = {
   },
 };
 
-export default connect()(UserSignupPage);
+const mapDispatchToProps = (dispatch) => {
+  return {
+    actions: {
+      postSignup: (user) => dispatch(authActions.signupHandler(user)),
+    },
+  };
+};
+
+export default connect(null, mapDispatchToProps)(UserSignupPage);

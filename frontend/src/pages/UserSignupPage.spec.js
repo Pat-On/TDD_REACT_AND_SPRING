@@ -1,6 +1,6 @@
 import React from "react";
 import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
-import UserSignupPage from "./UserSignupPage";
+import { UserSignupPage } from "./UserSignupPage";
 
 // after React-Testing_library version 9, this cleanup part is not needed anymore
 beforeEach(cleanup);
