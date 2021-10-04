@@ -1,5 +1,6 @@
 import React from "react";
 import * as apiCalls from "../api/apiCalls";
+import UserListItem from "./UserListItem";
 
 class UserList extends React.Component {
   state = {
@@ -10,15 +11,27 @@ class UserList extends React.Component {
     },
   };
   componentDidMount() {
+    this.loadData();
+    // .catch(() => {});
+  }
+
+  loadData = (requestedPage = 0) => {
     apiCalls
-      .listUsers({ page: this.state.page.number, size: this.state.page.size })
+      .listUsers({ page: requestedPage, size: this.state.page.size })
       .then((response) => {
         this.setState({
           page: response.data,
         });
       });
-    // .catch(() => {});
-  }
+  };
+
+  onClickNext = () => {
+    this.loadData(this.state.page.number + 1);
+  };
+
+  onClickPrevious = () => {
+    this.loadData(this.state.page.number - 1);
+  };
 
   render() {
     return (
@@ -27,13 +40,29 @@ class UserList extends React.Component {
           <h3 className="card-title m-auto">Users</h3>
           <div className="list-group list-group-flush" data-testid="usergroup">
             {this.state.page.content.map((user) => {
-              return (
-                <div
-                  className="list-group-item list-group-item-action"
-                  key={user.username}
-                >{`${user.displayName}@${user.username}`}</div>
-              );
+              return <UserListItem key={user.username} user={user} />;
             })}
+          </div>
+          <div className="clearfix">
+            {!this.state.page.first && (
+              <span
+                onClick={this.onClickPrevious}
+                className="badge badge-secondary text-dark float-right"
+                style={{ cursor: "pointer", float: "left" }}
+              >
+                &lt; previous
+              </span>
+            )}
+
+            {!this.state.page.last && (
+              <span
+                onClick={this.onClickNext}
+                className="badge badge-secondary text-dark float-right"
+                style={{ cursor: "pointer", float: "right" }}
+              >
+                next &gt;
+              </span>
+            )}
           </div>
         </div>
       </div>
