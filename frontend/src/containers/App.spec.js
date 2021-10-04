@@ -9,6 +9,17 @@ import authReducer from "../redux/authReducer";
 import axios from "axios";
 import App from "./App";
 import configureStore from "../redux/configureStore";
+//we are going to mock this apiCalls because child component has in in component did mount so rendering it
+// will trigger it and give to use banch of errors
+import * as apiCalls from "../api/apiCalls";
+
+apiCalls.listUsers = jest.fn().mockResolvedValue({
+  data: {
+    content: [],
+    number: 0,
+    size: 3,
+  },
+});
 
 beforeEach(() => {
   localStorage.clear();
@@ -286,3 +297,6 @@ describe("App", () => {
     expect(axiosAuthorization).toBeFalsy();
   });
 });
+
+// to hide the error but I am not sure if this is good practise check more about it.
+console.error = () => {};
