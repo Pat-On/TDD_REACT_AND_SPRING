@@ -8,6 +8,11 @@ import {
 import UserList from "./UserList";
 import * as apiCalls from "../api/apiCalls";
 
+// when we have elements where we use Link from react router
+// and it is not connected to the router it would fail
+// that is why we need to import it
+import { MemoryRouter } from "react-router-dom";
+
 apiCalls.listUsers = jest.fn().mockResolvedValue({
   data: {
     content: [],
@@ -17,7 +22,11 @@ apiCalls.listUsers = jest.fn().mockResolvedValue({
 });
 
 const setup = () => {
-  return render(<UserList />);
+  return render(
+    <MemoryRouter>
+      <UserList />
+    </MemoryRouter>
+  );
 };
 const mockedEmptySuccessResponse = {
   data: {
@@ -98,6 +107,14 @@ const mockSuccessGetMultiPageLast = {
   },
 };
 
+const mockFailGet = {
+  response: {
+    data: {
+      message: "Load error",
+    },
+  },
+};
+
 describe("UserList", () => {
   describe("Layout", () => {
     it("has header of Users", () => {
@@ -158,6 +175,17 @@ describe("UserList", () => {
       const previousLink = await findByText("< previous");
       expect(previousLink).not.toBeInTheDocument();
     });
+
+    it("has link to UserPage", async () => {
+      apiCalls.listUsers = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetSinglePage);
+      const { findByText, container } = setup();
+      await findByText("display1@user1");
+
+      const firstAnchor = container.querySelectorAll("a")[0];
+      expect(firstAnchor.getAttribute("href")).toBe("/user1");
+    });
   });
 
   describe("Lifecycle", () => {
@@ -202,6 +230,39 @@ describe("UserList", () => {
       fireEvent.click(previousLink);
       const firstPageUser = await findByText("display1@user1");
       expect(firstPageUser).toBeInTheDocument();
+    });
+
+    it("displays error message when loading other page fails", async () => {
+      apiCalls.listUsers = jest
+        .fn()
+        .mockResolvedValueOnce(mockSuccessGetMultiPageLast)
+        .mockRejectedValueOnce(mockFailGet);
+
+      const { findByText } = setup();
+      const previousLink = await findByText("< previous");
+      fireEvent.click(previousLink);
+
+      const errorMessage = await findByText("User load failed");
+      expect(errorMessage).toBeInTheDocument();
+    });
+
+    it("hides error message when successfully loading other page", async () => {
+      apiCalls.listUsers = jest
+        .fn()
+        .mockResolvedValueOnce(mockSuccessGetMultiPageLast)
+        .mockRejectedValueOnce(mockFailGet)
+        .mockResolvedValueOnce(mockSuccessGetMultiPageLast);
+
+      const { findByText } = setup();
+      const previousLink = await findByText("< previous");
+
+      fireEvent.click(previousLink);
+      await findByText("User load failed");
+
+      fireEvent.click(previousLink);
+      const errorMessage = await findByText("User load failed");
+
+      expect(errorMessage).not.toBeInTheDocument();
     });
   });
 });

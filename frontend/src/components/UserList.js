@@ -21,7 +21,11 @@ class UserList extends React.Component {
       .then((response) => {
         this.setState({
           page: response.data,
+          loadError: undefined,
         });
+      })
+      .catch((error) => {
+        this.setState({ loadError: "User load failed" });
       });
   };
 
@@ -65,6 +69,11 @@ class UserList extends React.Component {
             )}
           </div>
         </div>
+        {this.state.loadError && (
+          <span className="text-center text-danger">
+            {this.state.loadError}
+          </span>
+        )}
       </div>
     );
   }
