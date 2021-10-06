@@ -5,11 +5,6 @@ import ProfileImageWithDefault from "./ProfileImageWithDefault";
 const ProfileCard = (props) => {
   const { displayName, username, image } = props.user;
 
-  let imageSource = defaultPicture;
-  if (image) {
-    imageSource = "/images/profile/" + image;
-  }
-
   return (
     <div className="card">
       <div className="card-header text-center">
@@ -23,6 +18,11 @@ const ProfileCard = (props) => {
       </div>
       <div className="card-body text-center">
         <h4>{`${displayName}@${username}`}</h4>
+        {props.isEditable && (
+          <button className="btn btn-outline-success">
+            <i className="fas fa-user-edit" /> Edit
+          </button>
+        )}
       </div>
     </div>
   );
