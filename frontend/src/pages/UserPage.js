@@ -1,10 +1,12 @@
 import React from "react";
 import * as apiCalls from "../api/apiCalls";
+import ProfileCard from "../components/ProfileCard";
 
 class UserPage extends React.Component {
   state = {
     user: undefined,
     userNotFound: false,
+    isLoadingUser: false,
   };
   componentDidMount() {
     this.loadUser();
@@ -20,22 +22,32 @@ class UserPage extends React.Component {
     if (!username) {
       return;
     }
-    this.setState({ userNotFound: false });
+    this.setState({ userNotFound: false, isLoadingUser: true });
     apiCalls
       .getUser(username)
       .then((response) => {
-        this.setState({ user: response.data });
+        this.setState({ user: response.data, isLoadingUser: false });
       })
       .catch((error) => {
         this.setState({
           userNotFound: true,
+          isLoadingUser: false,
         });
       });
   };
 
   render() {
-    if (this.state.userNotFound) {
-      return (
+    let pageContent;
+    if (this.state.isLoadingUser) {
+      pageContent = (
+        <div className="d-flex">
+          <div className="spinner-border text-black-50 m-auto" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        </div>
+      );
+    } else if (this.state.userNotFound) {
+      pageContent = (
         <div className="alert alert-dange text-center" role="alert">
           <div className="alert-heading">
             <i className="fas fa-exclamation-triangle" />
@@ -43,16 +55,16 @@ class UserPage extends React.Component {
           <h5>User not found</h5>
         </div>
       );
+    } else {
+      pageContent = this.state.user && (
+        <ProfileCard user={this.state.user} />
+        // <span>
+        //   {`${this.state.user.displayName}@${this.state.user.username}`}
+        // </span>
+      );
     }
-    return (
-      <div data-testid="userpage">
-        {this.state.user && (
-          <span>
-            {`${this.state.user.displayName}@${this.state.user.username}`}
-          </span>
-        )}
-      </div>
-    );
+
+    return <div data-testid="userpage">{pageContent}</div>;
   }
 }
 
