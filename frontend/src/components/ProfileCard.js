@@ -15,6 +15,7 @@ const ProfileCard = (props) => {
           alt="profile"
           width="200"
           height="200"
+          src={props.loaderImage}
           className="rounded-circle shadow"
           image={image}
         />
@@ -22,12 +23,18 @@ const ProfileCard = (props) => {
       <div className="card-body text-center">
         {!props.inEditMode && <h4>{`${displayName}@${username}`}</h4>}
         {props.inEditMode && (
-          <Input
-            className="mb-2"
-            value={displayName}
-            label={`Change Display Name for ${username}`}
-            onChange={props.onChangeDisplayName}
-          />
+          <div className="mb-2">
+            <Input
+              value={displayName}
+              label={`Change Display Name for ${username}`}
+              onChange={props.onChangeDisplayName}
+            />
+            <input
+              className="form-control-file mt-2"
+              type="file"
+              onChange={props.onFileSelect}
+            />
+          </div>
         )}
         {showEditButton && (
           <button
