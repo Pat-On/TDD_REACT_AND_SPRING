@@ -56,13 +56,15 @@ const match = {
     username: "user1",
   },
 };
+
 beforeEach(() => {
   localStorage.clear();
   delete axios.defaults.headers.common["Authorization"];
 });
 
+let store;
 const setup = (props) => {
-  const store = configureStore(false);
+  store = configureStore(false);
   return render(
     <Provider store={store}>
       <UserPage {...props} />
@@ -540,6 +542,42 @@ describe("UserPAge", () => {
         "It must have minimum 4 and maximum 255 characters"
       );
       expect(errorMessage).not.toBeInTheDocument();
+    });
+
+    it("updates rdux state after updateUser api call success", async () => {
+      const { queryByText, findByText, container } = await setupForEdit();
+
+      let displayInput = container.querySelector("input");
+      fireEvent.change(displayInput, { target: { value: "display1-update" } });
+      apiCalls.updateUser = jest.fn().mockResolvedValue(mockSuccessUpdateUser);
+
+      const saveButton = queryByText("Save");
+      fireEvent.click(saveButton);
+      await waitForDomChange();
+
+      const storedUderData = store.getState();
+      expect(storedUderData.displayName).toBe(
+        mockSuccessUpdateUser.data.displayName
+      );
+      expect(storedUderData.image).toBe(mockSuccessUpdateUser.data.image);
+    });
+
+    it("updated local storage after updateUser api call success", async () => {
+      const { queryByText, findByText, container } = await setupForEdit();
+
+      let displayInput = container.querySelector("input");
+      fireEvent.change(displayInput, { target: { value: "display1-update" } });
+      apiCalls.updateUser = jest.fn().mockResolvedValue(mockSuccessUpdateUser);
+
+      const saveButton = queryByText("Save");
+      fireEvent.click(saveButton);
+      await waitForDomChange();
+
+      const storedUderData = JSON.parse(localStorage.getItem("hoax-auth"));
+      expect(storedUderData.displayName).toBe(
+        mockSuccessUpdateUser.data.displayName
+      );
+      expect(storedUderData.image).toBe(mockSuccessUpdateUser.data.image);
     });
   });
 });

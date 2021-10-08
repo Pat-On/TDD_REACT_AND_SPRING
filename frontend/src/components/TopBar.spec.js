@@ -8,6 +8,8 @@ import { Provider } from "react-redux";
 import { createStore } from "redux";
 import authReducer from "../redux/authReducer";
 
+import * as authActions from "../redux/authActions";
+
 const loggedInState = {
   id: 1,
   username: "user1",
@@ -28,8 +30,9 @@ const defaultState = {
 
 // when we are testing Links out of router we have to mock router because
 // if not we are going to have errors regarding this
+let store;
 const setup = (state = defaultState) => {
-  const store = createStore(authReducer, state);
+  store = createStore(authReducer, state);
   return render(
     <Provider store={store}>
       <MemoryRouter>
@@ -76,6 +79,19 @@ describe("TopBar", () => {
       const profileLink = queryByText("My Profile");
       expect(profileLink.getAttribute("href")).toBe("/user1");
     });
+
+    it("displays the displayName when user logged in", () => {
+      const { queryByText } = setup(loggedInState);
+      const displayName = queryByText("display1");
+      expect(displayName).toBeInTheDocument();
+    });
+
+    it("displays users image when user logged in", () => {
+      const { container } = setup(loggedInState);
+      const images = container.querySelectorAll("img");
+      const userImage = images[1];
+      expect(userImage.src).toContain("/images/profile/" + loggedInState.image);
+    });
   });
 
   describe("Interactions", () => {
@@ -85,6 +101,52 @@ describe("TopBar", () => {
       fireEvent.click(logoutLink);
       const loginLink = queryByText("Login");
       expect(loginLink).toBeInTheDocument();
+    });
+
+    it("adds show class to drop down menu when clicking username", () => {
+      const { queryByText, queryByTestId } = setup(loggedInState);
+      const displayName = queryByText("display1");
+      fireEvent.click(displayName);
+      const dropDownMenu = queryByTestId("drop-down-menu");
+      expect(dropDownMenu).toHaveClass("show");
+    });
+
+    it("removes  show class to drop down menu when clicking app log", () => {
+      const { queryByText, queryByTestId, container } = setup(loggedInState);
+      const displayName = queryByText("display1");
+      fireEvent.click(displayName);
+
+      const logo = container.querySelector("img");
+      fireEvent.click(logo);
+
+      const dropDownMenu = queryByTestId("drop-down-menu");
+      expect(dropDownMenu).not.toHaveClass("show");
+    });
+
+    it("removes  show class to drop down menu when clicking logout", () => {
+      const { queryByText, queryByTestId } = setup(loggedInState);
+      const displayName = queryByText("display1");
+      fireEvent.click(displayName);
+
+      fireEvent.click(queryByText("Logout"));
+
+      // emulating login user by just dispatching action with state
+      // so we basicaly repeated the situation what we saw in browser
+      store.dispatch(authActions.loginSuccess(loggedInState));
+
+      const dropDownMenu = queryByTestId("drop-down-menu");
+      expect(dropDownMenu).not.toHaveClass("show");
+    });
+
+    it("removes  show class to drop down menu when clicking MyProfile", () => {
+      const { queryByText, queryByTestId } = setup(loggedInState);
+      const displayName = queryByText("display1");
+      fireEvent.click(displayName);
+
+      fireEvent.click(queryByText("My Profile"));
+
+      const dropDownMenu = queryByTestId("drop-down-menu");
+      expect(dropDownMenu).not.toHaveClass("show");
     });
   });
 });
