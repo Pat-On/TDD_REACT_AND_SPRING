@@ -9,12 +9,14 @@ class HoaxSubmit extends Component {
     focus: false,
     content: undefined,
     pendingApiCall: false,
+    errors: {},
   };
 
   onChangeContent = (event) => {
     const value = event.target.value;
     this.setState({
       content: value,
+      errors: {},
     });
   };
 
@@ -29,7 +31,11 @@ class HoaxSubmit extends Component {
         this.setState({ focus: false, content: "", pendingApiCall: false });
       })
       .catch((error) => {
-        this.setState({ pendingApiCall: false });
+        let errors = {};
+        if (error.response.data && error.response.data.validationErrors) {
+          errors = error.response.data.validationErrors;
+        }
+        this.setState({ pendingApiCall: false, errors });
       });
   };
 
@@ -38,9 +44,13 @@ class HoaxSubmit extends Component {
   };
 
   onClickCancel = () => {
-    this.setState({ focus: false, content: "" });
+    this.setState({ focus: false, content: "", errors: {} });
   };
   render() {
+    let textAreaClassName = "form-control w-100";
+    if (this.state.errors.conent) {
+      textAreaClassName += "is-invalid";
+    }
     return (
       <div className="card d-flex flex-row p-1 ">
         <ProfileImageWithDefault
@@ -51,12 +61,17 @@ class HoaxSubmit extends Component {
         />
         <div className="flex-fill">
           <textarea
-            className="form-control w-100"
+            className={textAreaClassName}
             rows={this.state.focus ? 3 : 1}
             onFocus={this.onFocus}
             value={this.state.content}
             onChange={this.onChangeContent}
           />
+          {this.state.errors.content && (
+            <span className="invalid-feedback">
+              {this.state.errors.content}
+            </span>
+          )}
           {this.state.focus && (
             <div className="text-right mt-1">
               <ButtonWithProgress
