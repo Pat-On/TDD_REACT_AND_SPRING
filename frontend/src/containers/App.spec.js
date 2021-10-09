@@ -18,6 +18,14 @@ import configureStore from "../redux/configureStore";
 // will trigger it and give to use banch of errors
 import * as apiCalls from "../api/apiCalls";
 
+apiCalls.loadHoaxes = jest.fn().mockResolvedValue({
+  data: {
+    content: [],
+    number: 0,
+    size: 3,
+  },
+});
+
 apiCalls.listUsers = jest.fn().mockResolvedValue({
   data: {
     content: [],
