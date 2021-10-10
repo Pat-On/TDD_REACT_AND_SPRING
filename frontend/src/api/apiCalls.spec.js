@@ -175,11 +175,22 @@ describe("apiCalls", () => {
       const mockPostHoaxFile = jest.fn();
       // we are replacing the function post in axios to check how and when we use it
       axios.post = mockPostHoaxFile;
-      apiCalls.PostHoaxFile();
+      apiCalls.postHoaxFile();
 
       //jest is providing us to access to mock call history
       const path = mockPostHoaxFile.mock.calls[0][0];
       expect(path).toBe("/api/1.0/hoaxes/upload");
+    });
+  });
+
+  describe("deleteHoax", () => {
+    it("calls /api/1.0/hoaxes/5 when hoax id param provided as 5", () => {
+      const mockDelete = jest.fn();
+      axios.delete = mockDelete;
+      apiCalls.deleteHoax(5);
+
+      const path = mockDelete.mock.calls[0][0];
+      expect(path).toBe("/api/1.0/hoaxes/5");
     });
   });
 });
