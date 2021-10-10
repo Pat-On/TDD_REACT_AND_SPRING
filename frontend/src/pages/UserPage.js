@@ -200,3 +200,5 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(UserPage);
+
+console.warn = () => {};

@@ -389,3 +389,4 @@ describe("HoaxSubmit", () => {
 });
 
 console.errors = () => {};
+console.warn = () => {};
