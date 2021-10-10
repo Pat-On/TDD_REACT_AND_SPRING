@@ -7,20 +7,18 @@ import Input from "./input";
 
 class HoaxSubmit extends Component {
   state = {
-    focus: false,
+    focused: false,
     content: undefined,
     pendingApiCall: false,
     errors: {},
     file: undefined,
     image: undefined,
+    attachment: undefined,
   };
 
   onChangeContent = (event) => {
     const value = event.target.value;
-    this.setState({
-      content: value,
-      errors: {},
-    });
+    this.setState({ content: value, errors: {} });
   };
 
   onFileSelect = (event) => {
@@ -28,26 +26,51 @@ class HoaxSubmit extends Component {
       return;
     }
     const file = event.target.files[0];
-    //converting file to base64
     let reader = new FileReader();
     reader.onloadend = () => {
-      this.setState({
-        image: reader.result,
-        file,
-      });
+      this.setState(
+        {
+          image: reader.result,
+          file,
+        },
+        () => {
+          this.uploadFile();
+        }
+      );
     };
     reader.readAsDataURL(file);
+  };
+
+  uploadFile = () => {
+    const body = new FormData();
+    body.append("file", this.state.file);
+    apiCalls.postHoaxFile(body).then((response) => {
+      this.setState({ attachment: response.data });
+    });
+  };
+
+  resetState = () => {
+    this.setState({
+      pendingApiCall: false,
+      focused: false,
+      content: "",
+      errors: {},
+      image: undefined,
+      file: undefined,
+      attachment: undefined,
+    });
   };
 
   onClickHoaxify = () => {
     const body = {
       content: this.state.content,
+      attachment: this.state.attachment,
     };
     this.setState({ pendingApiCall: true });
     apiCalls
       .postHoax(body)
       .then((response) => {
-        this.setState({ focus: false, content: "", pendingApiCall: false });
+        this.resetState();
       })
       .catch((error) => {
         let errors = {};
@@ -59,25 +82,18 @@ class HoaxSubmit extends Component {
   };
 
   onFocus = () => {
-    this.setState({ focus: true });
-  };
-
-  onClickCancel = () => {
     this.setState({
-      focus: false,
-      content: "",
-      errors: {},
-      image: undefined,
-      file: undefined,
+      focused: true,
     });
   };
+
   render() {
     let textAreaClassName = "form-control w-100";
-    if (this.state.errors.conent) {
-      textAreaClassName += "is-invalid";
+    if (this.state.errors.content) {
+      textAreaClassName += " is-invalid";
     }
     return (
-      <div className="card d-flex flex-row p-1 ">
+      <div className="card d-flex flex-row p-1">
         <ProfileImageWithDefault
           className="rounded-circle m-1"
           width="32"
@@ -87,7 +103,7 @@ class HoaxSubmit extends Component {
         <div className="flex-fill">
           <textarea
             className={textAreaClassName}
-            rows={this.state.focus ? 3 : 1}
+            rows={this.state.focused ? 3 : 1}
             onFocus={this.onFocus}
             value={this.state.content}
             onChange={this.onChangeContent}
@@ -97,7 +113,7 @@ class HoaxSubmit extends Component {
               {this.state.errors.content}
             </span>
           )}
-          {this.state.focus && (
+          {this.state.focused && (
             <div>
               <div className="pt-1">
                 <Input type="file" onChange={this.onFileSelect} />
@@ -119,14 +135,12 @@ class HoaxSubmit extends Component {
                   pendingApiCall={this.state.pendingApiCall}
                   text="Hoaxify"
                 />
-
                 <button
                   className="btn btn-light ml-1"
+                  onClick={this.resetState}
                   disabled={this.state.pendingApiCall}
-                  onClick={this.onClickCancel}
                 >
-                  <i className="fas fa-times"></i>
-                  Cancel
+                  <i className="fas fa-times"></i> Cancel
                 </button>
               </div>
             </div>
