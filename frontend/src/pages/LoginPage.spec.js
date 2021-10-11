@@ -1,5 +1,11 @@
 import React from "react";
-import { render, fireEvent, waitFor, findByText } from "@testing-library/react";
+import {
+  render,
+  fireEvent,
+  waitFor,
+  findByText,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import { LoginPage } from "./LoginPage";
 
 describe("LoginPage", () => {
@@ -198,6 +204,7 @@ describe("LoginPage", () => {
       fireEvent.click(button);
 
       await findByText("Login failed");
+      // disapearence of alert is not async is instant that why can be query by text
       fireEvent.change(passwordInput, changeEvent("updated-P4ssword"));
 
       // Very interesting case that in this place we should put queryByText not findByText
@@ -248,9 +255,10 @@ describe("LoginPage", () => {
       fireEvent.click(button);
 
       const spinner = queryByText("Loading...");
-
+      await waitForElementToBeRemoved(spinner);
       // THIS HAS NO SENSE -> check this deeper
-      await waitFor(() => expect(spinner).not.toBeInTheDocument());
+      // await waitFor(() => expect(spinner).not.toBeInTheDocument());
+      expect(spinner).not.toBeInTheDocument();
     });
 
     it("hides spinner after api call finishes with error", async () => {
@@ -274,10 +282,11 @@ describe("LoginPage", () => {
       fireEvent.click(button);
 
       // this is nice example regardin async await
-      //   const spinner = queryByText("Loading...");
-      let spinner = await findByText("Loading...");
-      await waitFor(() => expect(spinner));
-      spinner = queryByText("Loading...");
+      const spinner = queryByText("Loading...");
+      // let spinner = await findByText("Loading...");
+      // await waitFor(() => expect(spinner));
+      await waitForElementToBeRemoved(spinner);
+      // spinner = queryByText("Loading...");
       expect(spinner).not.toBeInTheDocument();
     });
 
@@ -290,10 +299,14 @@ describe("LoginPage", () => {
         push: jest.fn(),
       };
 
-      setUpForSubmit({ actions, history });
+      const { queryByText } = setUpForSubmit({ actions, history });
       fireEvent.click(button);
 
-      await waitFor(() => expect(history.push).toHaveBeenCalledWith("/"));
+      await waitForElementToBeRemoved(() => queryByText("Loading..."));
+      expect(history.push).toHaveBeenCalledWith("/");
+
+      //work as well -> so there is like in every case many different solution
+      // await waitFor(() => expect(history.push).toHaveBeenCalledWith("/"));
     });
   });
 });
