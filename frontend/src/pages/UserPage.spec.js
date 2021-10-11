@@ -313,11 +313,15 @@ describe("UserPAge", () => {
       // expect(saveButton).toBeDisabled();
 
       //modern version:
-      const { queryByRole } = await setupForEdit();
+      const { queryByRole, debug } = await setupForEdit();
       apiCalls.updateUser = mockDelayedUpdateSuccess();
 
+      // it is solution. old version of it was finding the button but in new version it is returning span
+      // this is better approach because we are finding Role what is more elastic for us
       const saveButton = queryByRole("button", { name: "Save" });
       fireEvent.click(saveButton);
+      // nice method
+      // debug();
 
       expect(saveButton).toBeDisabled();
     });

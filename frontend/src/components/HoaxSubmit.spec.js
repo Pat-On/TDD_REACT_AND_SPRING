@@ -477,7 +477,8 @@ describe("HoaxSubmit", () => {
       expect(apiCalls.postHoaxFile).toHaveBeenCalledTimes(1);
     });
 
-    it("calls postHoaxFile with selected file", async (done) => {
+    //in new jest we can use only async or done we can not use them both atthe same time
+    it("calls postHoaxFile with selected file", async () => {
       apiCalls.postHoaxFile = jest.fn().mockResolvedValue({
         data: {
           id: 1,
@@ -499,14 +500,22 @@ describe("HoaxSubmit", () => {
 
       const body = apiCalls.postHoaxFile.mock.calls[0][0];
 
-      const reader = new FileReader();
+      // promisifying! - as a solution for using at the same time done() and async
+      const readFile = () => {
+        return new Promise((resolve, rejesct) => {
+          const reader = new FileReader();
 
-      reader.onloadend = () => {
-        expect(reader.result).toBe("dummy content");
-        done();
+          reader.onloadend = () => {
+            resolve(reader.result);
+          };
+          reader.readAsText(body.get("file"));
+        });
       };
-      reader.readAsText(body.get("file"));
+
+      const result = await readFile();
+      expect(result).toBe("dummy content");
     });
+
     it("calls postHoax with hoax with file attachment object when clicking Hoaxify", async () => {
       apiCalls.postHoaxFile = jest.fn().mockResolvedValue({
         data: {
