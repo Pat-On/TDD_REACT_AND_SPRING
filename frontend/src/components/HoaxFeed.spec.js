@@ -1,8 +1,8 @@
 import React from "react";
 import {
   render,
-  waitForDomChange,
-  waitForElement,
+  waitForElementToBeRemoved,
+  waitFor,
   fireEvent,
 } from "@testing-library/react";
 import HoaxFeed from "./HoaxFeed";
@@ -230,10 +230,10 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup();
-      await waitForDomChange();
+      const { findByText } = setup();
+      await findByText("This is the latest hoax");
       runTimer();
-      await waitForElement(() => queryByText("There is 1 new hoax"));
+      await findByText("There is 1 new hoax");
       const firstParam = apiCalls.loadNewHoaxCount.mock.calls[0][0];
       expect(firstParam).toBe(10);
       useRealIntervals();
@@ -246,10 +246,10 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      await waitForElement(() => queryByText("There is 1 new hoax"));
+      await findByText("There is 1 new hoax");
       expect(apiCalls.loadNewHoaxCount).toHaveBeenCalledWith(10, "user1");
       useRealIntervals();
     });
@@ -261,12 +261,10 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       expect(newHoaxCount).toBeInTheDocument();
       useRealIntervals();
     });
@@ -278,17 +276,15 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      await waitForElement(() => queryByText("There is 1 new hoax"));
+      await findByText("There is 1 new hoax");
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 2 } });
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There are 2 new hoaxes")
-      );
+      const newHoaxCount = await findByText("There are 2 new hoaxes");
       expect(newHoaxCount).toBeInTheDocument();
       useRealIntervals();
     });
@@ -300,10 +296,10 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText, unmount } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText, unmount } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      await waitForElement(() => queryByText("There is 1 new hoax"));
+      await findByText("There is 1 new hoax");
       unmount();
       expect(apiCalls.loadNewHoaxCount).toHaveBeenCalledTimes(1);
       useRealIntervals();
@@ -314,12 +310,10 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText } = setup({ user: "user1" });
+      await findByText("There are no hoaxes");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       expect(newHoaxCount).toBeInTheDocument();
       useRealIntervals();
     });
@@ -327,10 +321,8 @@ describe("HoaxFeed", () => {
   describe("Layout", () => {
     it("displays no hoax message when the response has empty page", async () => {
       apiCalls.loadHoaxes = jest.fn().mockResolvedValue(mockEmptyResponse);
-      const { queryByText } = setup();
-      const message = await waitForElement(() =>
-        queryByText("There are no hoaxes")
-      );
+      const { findByText } = setup();
+      const message = await findByText("There are no hoaxes");
       expect(message).toBeInTheDocument();
     });
     it("does not display no hoax message when the response has page of hoax", async () => {
@@ -338,8 +330,10 @@ describe("HoaxFeed", () => {
         .fn()
         .mockResolvedValue(mockSuccessGetHoaxesSinglePage);
       const { queryByText } = setup();
-      await waitForDomChange();
-      expect(queryByText("There are no hoaxes")).not.toBeInTheDocument();
+      const message = queryByText("There are no hoaxes");
+      await waitFor(() => {
+        expect(message).not.toBeInTheDocument();
+      });
     });
     it("displays spinner when loading the hoaxes", async () => {
       apiCalls.loadHoaxes = jest.fn().mockImplementation(() => {
@@ -356,18 +350,16 @@ describe("HoaxFeed", () => {
       apiCalls.loadHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetHoaxesSinglePage);
-      const { queryByText } = setup();
-      const hoaxContent = await waitForElement(() =>
-        queryByText("This is the latest hoax")
-      );
+      const { findByText } = setup();
+      const hoaxContent = await findByText("This is the latest hoax");
       expect(hoaxContent).toBeInTheDocument();
     });
     it("displays Load More when there are next pages", async () => {
       apiCalls.loadHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetHoaxesFirstOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
       expect(loadMore).toBeInTheDocument();
     });
   });
@@ -379,8 +371,8 @@ describe("HoaxFeed", () => {
       apiCalls.loadOldHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetHoaxesLastOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
       const firstParam = apiCalls.loadOldHoaxes.mock.calls[0][0];
       expect(firstParam).toBe(9);
@@ -392,8 +384,8 @@ describe("HoaxFeed", () => {
       apiCalls.loadOldHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetHoaxesLastOfMultiPage);
-      const { queryByText } = setup({ user: "user1" });
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { findByText } = setup({ user: "user1" });
+      const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
       expect(apiCalls.loadOldHoaxes).toHaveBeenCalledWith(9, "user1");
     });
@@ -404,12 +396,10 @@ describe("HoaxFeed", () => {
       apiCalls.loadOldHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetHoaxesLastOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
-      const oldHoax = await waitForElement(() =>
-        queryByText("This is the oldest hoax")
-      );
+      const oldHoax = await findByText("This is the oldest hoax");
       expect(oldHoax).toBeInTheDocument();
     });
     it("hides Load More when loadOldHoaxes api call returns last page", async () => {
@@ -419,11 +409,12 @@ describe("HoaxFeed", () => {
       apiCalls.loadOldHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetHoaxesLastOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
-      await waitForElement(() => queryByText("This is the oldest hoax"));
-      expect(queryByText("Load More")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(loadMore).not.toBeInTheDocument();
+      });
     });
     // load new hoaxes
     it("calls loadNewHoaxes with hoax id when clicking New Hoax Count Card", async () => {
@@ -437,12 +428,10 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewHoaxesList);
-      const { queryByText } = setup();
-      await waitForDomChange();
+      const { findByText } = setup();
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       fireEvent.click(newHoaxCount);
       const firstParam = apiCalls.loadNewHoaxes.mock.calls[0][0];
       expect(firstParam).toBe(10);
@@ -459,12 +448,10 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewHoaxesList);
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       fireEvent.click(newHoaxCount);
       expect(apiCalls.loadNewHoaxes).toHaveBeenCalledWith(10, "user1");
       useRealIntervals();
@@ -480,16 +467,13 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewHoaxesList);
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       fireEvent.click(newHoaxCount);
-      const newHoax = await waitForElement(() =>
-        queryByText("This is the newest hoax")
-      );
+      const newHoax = await findByText("This is the newest hoax");
+
       expect(newHoax).toBeInTheDocument();
       useRealIntervals();
     });
@@ -504,14 +488,12 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewHoaxesList);
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText, queryByText } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       fireEvent.click(newHoaxCount);
-      await waitForElement(() => queryByText("This is the newest hoax"));
+      await findByText("This is the newest hoax");
       expect(queryByText("There is 1 new hoax")).not.toBeInTheDocument();
       useRealIntervals();
     });
@@ -522,8 +504,8 @@ describe("HoaxFeed", () => {
       apiCalls.loadOldHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetHoaxesLastOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
       fireEvent.click(loadMore);
 
@@ -540,10 +522,10 @@ describe("HoaxFeed", () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { queryByText, findByText } = setup();
+      const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
-      const spinner = await waitForElement(() => queryByText("Loading..."));
+      const spinner = await findByText("Loading...");
       expect(spinner).toBeInTheDocument();
       expect(queryByText("Load More")).not.toBeInTheDocument();
     });
@@ -558,10 +540,10 @@ describe("HoaxFeed", () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { queryByText, findByText } = setup();
+      const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
-      await waitForElement(() => queryByText("This hoax is in middle page"));
+      await findByText("This hoax is in middle page");
       expect(queryByText("Loading...")).not.toBeInTheDocument();
       expect(queryByText("Load More")).toBeInTheDocument();
     });
@@ -576,11 +558,11 @@ describe("HoaxFeed", () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText("Load More"));
+      const { queryByText, findByText } = setup();
+      const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
-      await waitForElement(() => queryByText("Loading..."));
-      await waitForDomChange();
+      const spinner = await findByText("Loading...");
+      await waitForElementToBeRemoved(spinner);
       expect(queryByText("Loading...")).not.toBeInTheDocument();
       expect(queryByText("Load More")).toBeInTheDocument();
     });
@@ -597,12 +579,11 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewHoaxesList);
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
+
       fireEvent.click(newHoaxCount);
       fireEvent.click(newHoaxCount);
 
@@ -624,14 +605,12 @@ describe("HoaxFeed", () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      await waitForDomChange();
+      const { queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       fireEvent.click(newHoaxCount);
-      const spinner = await waitForElement(() => queryByText("Loading..."));
+      const spinner = await findByText("Loading...");
       expect(spinner).toBeInTheDocument();
       expect(queryByText("There is 1 new hoax")).not.toBeInTheDocument();
       useRealIntervals();
@@ -647,14 +626,12 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxes = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewHoaxesList);
-      const { queryByText } = setup({ user: "user1" });
-      await waitForDomChange();
+      const { queryByText, findByText } = setup({ user: "user1" });
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       fireEvent.click(newHoaxCount);
-      await waitForElement(() => queryByText("This is the newest hoax"));
+      await findByText("This is the newest hoax");
       expect(queryByText("Loading...")).not.toBeInTheDocument();
       expect(queryByText("There is 1 new hoax")).not.toBeInTheDocument();
       useRealIntervals();
@@ -674,17 +651,16 @@ describe("HoaxFeed", () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      await waitForDomChange();
+      const { queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       runTimer();
-      const newHoaxCount = await waitForElement(() =>
-        queryByText("There is 1 new hoax")
-      );
+      const newHoaxCount = await findByText("There is 1 new hoax");
       fireEvent.click(newHoaxCount);
-      await waitForElement(() => queryByText("Loading..."));
-      await waitForDomChange();
-      expect(queryByText("Loading...")).not.toBeInTheDocument();
-      expect(queryByText("There is 1 new hoax")).toBeInTheDocument();
+      await findByText("Loading...");
+      await waitFor(() => {
+        expect(queryByText("Loading...")).not.toBeInTheDocument();
+        expect(queryByText("There is 1 new hoax")).toBeInTheDocument();
+      });
       useRealIntervals();
     });
     it("displays modal when clicking delete on hoax", async () => {
@@ -694,8 +670,8 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByTestId, container } = setup();
-      await waitForDomChange();
+      const { queryByTestId, container, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
 
@@ -709,8 +685,8 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByTestId, container, queryByText } = setup();
-      await waitForDomChange();
+      const { queryByTestId, container, queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
 
@@ -726,8 +702,8 @@ describe("HoaxFeed", () => {
       apiCalls.loadNewHoaxCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
 
@@ -745,8 +721,8 @@ describe("HoaxFeed", () => {
         .mockResolvedValue({ data: { count: 1 } });
 
       apiCalls.deleteHoax = jest.fn().mockResolvedValue({});
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
       const deleteHoaxButton = queryByText("Delete Hoax");
@@ -762,15 +738,16 @@ describe("HoaxFeed", () => {
         .mockResolvedValue({ data: { count: 1 } });
 
       apiCalls.deleteHoax = jest.fn().mockResolvedValue({});
-      const { container, queryByText, queryByTestId } = setup();
-      await waitForDomChange();
+      const { container, queryByText, queryByTestId, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
       const deleteHoaxButton = queryByText("Delete Hoax");
       fireEvent.click(deleteHoaxButton);
-      await waitForDomChange();
-      const modalRootDiv = queryByTestId("modal-root");
-      expect(modalRootDiv).not.toHaveClass("d-block show");
+      await waitFor(() => {
+        const modalRootDiv = queryByTestId("modal-root");
+        expect(modalRootDiv).not.toHaveClass("d-block show");
+      });
     });
     it("removes the deleted hoax from document after successful deleteHoax api call", async () => {
       apiCalls.loadHoaxes = jest
@@ -781,15 +758,16 @@ describe("HoaxFeed", () => {
         .mockResolvedValue({ data: { count: 1 } });
 
       apiCalls.deleteHoax = jest.fn().mockResolvedValue({});
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
       const deleteHoaxButton = queryByText("Delete Hoax");
       fireEvent.click(deleteHoaxButton);
-      await waitForDomChange();
-      const deletedHoaxContent = queryByText("This is the latest hoax");
-      expect(deletedHoaxContent).not.toBeInTheDocument();
+      await waitFor(() => {
+        const deletedHoaxContent = queryByText("This is the latest hoax");
+        expect(deletedHoaxContent).not.toBeInTheDocument();
+      });
     });
     it("disables Modal Buttons when api call in progress", async () => {
       apiCalls.loadHoaxes = jest
@@ -806,8 +784,8 @@ describe("HoaxFeed", () => {
           }, 300);
         });
       });
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
       const deleteHoaxButton = queryByText("Delete Hoax");
@@ -831,8 +809,8 @@ describe("HoaxFeed", () => {
           }, 300);
         });
       });
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
       const deleteHoaxButton = queryByText("Delete Hoax");
@@ -855,15 +833,16 @@ describe("HoaxFeed", () => {
           }, 300);
         });
       });
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText("This is the latest hoax");
       const deleteButton = container.querySelectorAll("button")[0];
       fireEvent.click(deleteButton);
       const deleteHoaxButton = queryByText("Delete Hoax");
       fireEvent.click(deleteHoaxButton);
-      await waitForDomChange();
-      const spinner = queryByText("Loading...");
-      expect(spinner).not.toBeInTheDocument();
+      await waitFor(() => {
+        const spinner = queryByText("Loading...");
+        expect(spinner).not.toBeInTheDocument();
+      });
     });
   });
 });

@@ -1,12 +1,9 @@
 import React from "react";
 import {
   render,
-  waitFor,
   fireEvent,
-  queryByText,
-  findByText,
-  waitForDomChange,
-  waitForElement,
+  waitFor,
+  waitForElementToBeRemoved,
 } from "@testing-library/react";
 import UserPage from "./UserPage";
 import * as apiCalls from "../api/apiCalls";
@@ -139,7 +136,7 @@ describe("UserPAge", () => {
       setUserOneLoggedInStorage();
       apiCalls.getUser = jest.fn().mockResolvedValue(mockSuccessGetUser);
       const { findByText } = setup({ match });
-      // await findByText("display1@user1");
+      await findByText("display1@user1");
       const editButton = await findByText("Edit");
 
       expect(editButton).toBeInTheDocument();
@@ -259,7 +256,7 @@ describe("UserPAge", () => {
       expect(originalDisplayText).toBeInTheDocument();
     });
 
-    it("returns to lst updated displayName when display name is changed for another time but cancelled", async () => {
+    it("returns to last updated displayName when display name is changed for another time but cancelled", async () => {
       const { queryByText, findByText, container } = await setupForEdit();
 
       let displayInput = container.querySelector("input");
@@ -285,7 +282,7 @@ describe("UserPAge", () => {
     });
 
     it("displays spinner when there is updateUser api call", async () => {
-      const { queryByText, findByText } = await setupForEdit();
+      const { queryByText } = await setupForEdit();
       apiCalls.updateUser = mockDelayedUpdateSuccess();
 
       const saveButton = queryByText("Save");
@@ -313,7 +310,10 @@ describe("UserPAge", () => {
       // expect(saveButton).toBeDisabled();
 
       //modern version:
-      const { queryByRole, debug } = await setupForEdit();
+      const {
+        queryByRole,
+        // debug
+      } = await setupForEdit();
       apiCalls.updateUser = mockDelayedUpdateSuccess();
 
       // it is solution. old version of it was finding the button but in new version it is returning span
@@ -327,7 +327,7 @@ describe("UserPAge", () => {
     });
 
     it("disables cancel button when there is updateUser api call", async () => {
-      const { queryByText, findByText } = await setupForEdit();
+      const { queryByText } = await setupForEdit();
       apiCalls.updateUser = mockDelayedUpdateSuccess();
 
       const saveButton = queryByText("Save");
@@ -356,7 +356,7 @@ describe("UserPAge", () => {
     });
 
     it("enables save button after updateUser api call fails", async () => {
-      const { queryByText, findByText, container } = await setupForEdit();
+      const { queryByText, container } = await setupForEdit();
 
       let displayInput = container.querySelector("input");
       fireEvent.change(displayInput, { target: { value: "display1-update" } });
@@ -365,13 +365,16 @@ describe("UserPAge", () => {
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
 
-      await waitForDomChange();
+      await waitFor(() => {
+        expect(saveButton).not.toBeDisabled();
+      });
 
-      expect(saveButton).not.toBeDisabled();
+      // await waitForDomChange();
+      // expect(saveButton).not.toBeDisabled();
     });
 
     it("displays the selected image in edit mode", async () => {
-      const { queryByText, findByText, container } = await setupForEdit();
+      const { container } = await setupForEdit();
 
       const inputs = container.querySelectorAll("input");
       const uploadInput = inputs[1];
@@ -382,14 +385,14 @@ describe("UserPAge", () => {
 
       fireEvent.change(uploadInput, { target: { files: [file] } });
 
-      await waitForDomChange();
-
-      const image = container.querySelector("img");
-      expect(image.src).toContain("data:image/png;base64");
+      await waitFor(() => {
+        const image = container.querySelector("img");
+        expect(image.src).toContain("data:image/png;base64");
+      });
     });
 
     it("returns back to the original image even the new image is added to upload box but canceled", async () => {
-      const { queryByText, findByText, container } = await setupForEdit();
+      const { queryByText, container } = await setupForEdit();
 
       const inputs = container.querySelectorAll("input");
       const uploadInput = inputs[1];
@@ -400,12 +403,13 @@ describe("UserPAge", () => {
 
       fireEvent.change(uploadInput, { target: { files: [file] } });
 
-      await waitForDomChange();
       const cancelButton = queryByText("Cancel");
       fireEvent.click(cancelButton);
 
-      const image = container.querySelector("img");
-      expect(image.src).toContain("/images/profile/profile1.png");
+      await waitFor(() => {
+        const image = container.querySelector("img");
+        expect(image.src).toContain("/images/profile/profile1.png");
+      });
     });
 
     it("does not throw error file after file not selected", async () => {
@@ -431,14 +435,17 @@ describe("UserPAge", () => {
 
       fireEvent.change(uploadInput, { target: { files: [file] } });
 
-      await waitForDomChange();
+      await waitFor(() => {
+        const image = container.querySelector("img");
+        expect(image.src).toContain("data:image/png;base64");
+      });
 
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
 
       const requestBody = apiCalls.updateUser.mock.calls[0][1];
 
-      expect(requestBody.displayName).not.toContain("data:image/png;base64");
+      expect(requestBody.image).not.toContain("data:image/png;base64");
     });
 
     it("returns to last updaed image when image is change for another time but cancelled", async () => {
@@ -454,7 +461,11 @@ describe("UserPAge", () => {
 
       fireEvent.change(uploadInput, { target: { files: [file] } });
 
-      await waitForDomChange();
+      // await waitForDomChange();
+      await waitFor(() => {
+        const image = container.querySelector("img");
+        expect(image.src).toContain("data:image/png;base64");
+      });
 
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
@@ -478,45 +489,50 @@ describe("UserPAge", () => {
     });
 
     it("displays validation error for displayName when update api fails", async () => {
-      const { queryByText, container, findByText } = await setupForEdit();
+      const { queryByText, findByText } = await setupForEdit();
       apiCalls.updateUser = jest.fn().mockRejectedValue(mockFailUpdateUser);
 
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
-      await waitForDomChange();
 
-      const errorMessage = queryByText(
+      // await waitForDomChange();
+
+      const errorMessage = await findByText(
         "It must have minimum 4 and maximum 255 characters"
       );
       expect(errorMessage).toBeInTheDocument();
     });
 
     it("shows validation error for file when update api fails", async () => {
-      const { queryByText, container, findByText } = await setupForEdit();
+      const { queryByText, findByText } = await setupForEdit();
       apiCalls.updateUser = jest.fn().mockRejectedValue(mockFailUpdateUser);
 
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
-      await waitForDomChange();
 
-      const errorMessage = queryByText("Only PNG and JPG files are allowed");
+      // await waitForDomChange();
+
+      const errorMessage = await findByText(
+        "Only PNG and JPG files are allowed"
+      );
       expect(errorMessage).toBeInTheDocument();
     });
 
     it("removes validation error for displayName when user changes the displayNames", async () => {
-      const { queryByText, container, findByText } = await setupForEdit();
+      const { queryByRole, container, findByText } = await setupForEdit();
       apiCalls.updateUser = jest.fn().mockRejectedValue(mockFailUpdateUser);
 
-      const saveButton = queryByText("Save");
+      const saveButton = queryByRole("button", { name: "Save" });
       fireEvent.click(saveButton);
-      await waitForDomChange();
+
+      // await waitForDomChange();
+      const errorMessage = await findByText(
+        "It must have minimum 4 and maximum 255 characters"
+      );
 
       const displayInput = container.querySelectorAll("input")[0];
       fireEvent.change(displayInput, { target: { value: "new-display-name" } });
 
-      const errorMessage = queryByText(
-        "It must have minimum 4 and maximum 255 characters"
-      );
       expect(errorMessage).not.toBeInTheDocument();
     });
 
@@ -526,7 +542,10 @@ describe("UserPAge", () => {
 
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
-      await waitForDomChange();
+      const errorMessage = await findByText(
+        "Only PNG and JPG files are allowed"
+      );
+      // await waitForDomChange();
       const fileInput = container.querySelectorAll("input")[1];
 
       const newFile = new File(["dummy content"], "example2.png", {
@@ -534,30 +553,38 @@ describe("UserPAge", () => {
       });
       fireEvent.change(fileInput, { target: { files: [newFile] } });
 
-      await waitForDomChange();
-      const errorMessage = queryByText("Only PNG and JPG files are allowed");
-      expect(errorMessage).not.toBeInTheDocument();
+      // await waitForDomChange();
+      // const errorMessage = queryByText("Only PNG and JPG files are allowed");
+      await waitFor(() => {
+        expect(errorMessage).not.toBeInTheDocument();
+      });
+      // expect(errorMessage).not.toBeInTheDocument();
     });
 
     it("removes validation error if user cancels", async () => {
-      const { queryByText, container, findByText } = await setupForEdit();
+      const { queryByText } = await setupForEdit();
       apiCalls.updateUser = jest.fn().mockRejectedValue(mockFailUpdateUser);
 
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
-      await waitForDomChange();
+      // waiting for operation saving the image to server to be done
+      // await waitForDomChange();
+      // that is wait we can wait for moment when spinner would be removed
+      // debug();
+      await waitForElementToBeRemoved(() => queryByText("Loading..."));
 
       fireEvent.click(queryByText("Cancel"));
       fireEvent.click(queryByText("Edit"));
-
+      // debug();
       const errorMessage = queryByText(
         "It must have minimum 4 and maximum 255 characters"
       );
+
       expect(errorMessage).not.toBeInTheDocument();
     });
 
     it("updates rdux state after updateUser api call success", async () => {
-      const { queryByText, findByText, container } = await setupForEdit();
+      const { queryByText, container } = await setupForEdit();
 
       let displayInput = container.querySelector("input");
       fireEvent.change(displayInput, { target: { value: "display1-update" } });
@@ -565,7 +592,9 @@ describe("UserPAge", () => {
 
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
-      await waitForDomChange();
+
+      // await waitForDomChange();
+      await waitForElementToBeRemoved(saveButton);
 
       const storedUderData = store.getState();
       expect(storedUderData.displayName).toBe(
@@ -575,7 +604,7 @@ describe("UserPAge", () => {
     });
 
     it("updated local storage after updateUser api call success", async () => {
-      const { queryByText, findByText, container } = await setupForEdit();
+      const { queryByText, container } = await setupForEdit();
 
       let displayInput = container.querySelector("input");
       fireEvent.change(displayInput, { target: { value: "display1-update" } });
@@ -583,7 +612,8 @@ describe("UserPAge", () => {
 
       const saveButton = queryByText("Save");
       fireEvent.click(saveButton);
-      await waitForDomChange();
+
+      await waitForElementToBeRemoved(saveButton);
 
       const storedUderData = JSON.parse(localStorage.getItem("hoax-auth"));
       expect(storedUderData.displayName).toBe(

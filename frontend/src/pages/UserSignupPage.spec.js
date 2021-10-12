@@ -1,5 +1,11 @@
 import React from "react";
-import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  cleanup,
+  fireEvent,
+  waitFor,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import { UserSignupPage } from "./UserSignupPage";
 
 // after React-Testing_library version 9, this cleanup part is not needed anymore
@@ -141,7 +147,7 @@ describe("UserSignupPage", () => {
       expect(actions.postSignup).toHaveBeenCalledTimes(1);
     });
 
-    it("does not throw exception when clicking the button when actions not provided in props ", () => {
+    it("does not throw exception when clicking the button when actions not provided in props", () => {
       setUpForSubmit();
       expect(() => fireEvent.click(button)).not.toThrow();
     });
@@ -197,11 +203,12 @@ describe("UserSignupPage", () => {
       fireEvent.click(button);
 
       const spinner = queryByText("Loading...");
+      await waitForElementToBeRemoved(spinner);
 
-      await waitFor(() => expect(spinner).not.toBeInTheDocument());
+      expect(spinner).not.toBeInTheDocument();
+      // await waitFor(() => expect(spinner).not.toBeInTheDocument());
     });
 
-    /// TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     it("hides spinner after api call finishes with error", async () => {
       // we are going to mock it
       const actions = {
@@ -219,10 +226,10 @@ describe("UserSignupPage", () => {
       fireEvent.click(button);
 
       const spinner = queryByText("Loading...");
+      await waitForElementToBeRemoved(spinner);
+      expect(spinner).not.toBeInTheDocument();
 
-      await waitFor(() => expect(spinner).not.toBeInTheDocument());
-
-      /// TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      // await waitFor(() => expect(spinner).not.toBeInTheDocument());
     });
 
     it("displays validation error for displayName when error is receivd for the field", async () => {

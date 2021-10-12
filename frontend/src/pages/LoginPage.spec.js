@@ -2,8 +2,6 @@ import React from "react";
 import {
   render,
   fireEvent,
-  waitFor,
-  findByText,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import { LoginPage } from "./LoginPage";
