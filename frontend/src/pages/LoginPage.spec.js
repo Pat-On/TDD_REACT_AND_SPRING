@@ -2,6 +2,7 @@ import React from "react";
 import {
   render,
   fireEvent,
+  waitFor,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import { LoginPage } from "./LoginPage";
@@ -93,21 +94,22 @@ describe("LoginPage", () => {
       expect(passwordInput).toHaveValue("P4ssword");
     });
 
-    it("calss postLogin when the actions are provided in props and input fields have values", () => {
+    it("calss postLogin when the actions are provided in props and input fields have values", async () => {
       const actions = {
         postLogin: jest.fn().mockResolvedValue({}),
       };
       setUpForSubmit({ actions, history });
       fireEvent.click(button);
-      expect(actions.postLogin).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(actions.postLogin).toHaveBeenCalledTimes(1));
     });
 
-    it("does not throw exception when clicking the button when actions not provided in props", () => {
+    it("does not throw exception when clicking the button when actions not provided in props", async () => {
       setUpForSubmit({ actions, history });
-      expect(() => fireEvent.click(button)).not.toThrow();
+
+      await waitFor(() => expect(() => fireEvent.click(button)).not.toThrow());
     });
 
-    it("calss postLogin with credentials in body", () => {
+    it("calss postLogin with credentials in body", async () => {
       const actions = {
         postLogin: jest.fn().mockResolvedValue({}),
       };
@@ -119,8 +121,9 @@ describe("LoginPage", () => {
         username: "my-user-name",
         password: "P4ssword",
       };
-
-      expect(actions.postLogin).toHaveBeenCalledWith(expectedUserObject);
+      await waitFor(() =>
+        expect(actions.postLogin).toHaveBeenCalledWith(expectedUserObject)
+      );
     });
 
     it("enables the button when username and password is not empty", () => {
@@ -211,7 +214,7 @@ describe("LoginPage", () => {
     });
 
     // it is not efficient to write tests for styling because it may change more often than busines logic
-    it("does not allow user to click the Login Up button when there is an ongoing api call", () => {
+    it("does not allow user to click the Login Up button when there is an ongoing api call", async () => {
       // we are going to mock it
       const actions = {
         postLogin: mockAsyncDelayed(),
@@ -223,10 +226,11 @@ describe("LoginPage", () => {
       fireEvent.click(button);
       fireEvent.click(button);
       fireEvent.click(button);
-      expect(actions.postLogin).toHaveBeenCalledTimes(1);
+      // solution for the act() error.
+      await waitFor(() => expect(actions.postLogin).toHaveBeenCalledTimes(1));
     });
 
-    it("displays spinner when there is an ongoing api call", () => {
+    it("displays spinner when there is an ongoing api call", async () => {
       // we are going to mock it
       const actions = {
         postLogin: mockAsyncDelayed(),
@@ -238,7 +242,8 @@ describe("LoginPage", () => {
       fireEvent.click(button);
 
       const spinner = queryByText("Loading...");
-      expect(spinner).toBeInTheDocument();
+
+      await waitFor(() => expect(spinner).toBeInTheDocument());
     });
 
     it("hides spinner after api call finishes successfully", async () => {
